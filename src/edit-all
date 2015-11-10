@@ -1,0 +1,4 @@
+#!/bin/bash
+
+$EDITOR ../Makefile user_main.cpp config.h log.h edit-all
+
