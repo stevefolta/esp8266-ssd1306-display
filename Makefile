@@ -1,5 +1,12 @@
-SOURCES := user_main.c
+SOURCES := user_main.cpp
 DRIVER_SOURCES := uart.c
+
+# U8glib
+SOURCES += u8g_font.c u8g_rect.c U8glib.cpp
+SWITCHES += TENSILICA
+
+# SDK header problems revealed by U8glib:
+SWITCHES += __have_long64=0 __int_fast64_t_defined=1
 
 -include Makefile.local
 
@@ -9,10 +16,16 @@ OBJECTS_DIR ?= objects
 
 default: all
 
+VPATH += src
+
 # Project specific:
+
 ifndef U8GLIB_PATH
 	foo := $(error You must define U8GLIB_PATH in your Makefile.local.)
 endif
+
+VPATH += $(U8GLIB_PATH)/csrc $(U8GLIB_PATH)/cppsrc $(U8GLIB_PATH)/fntsrc
+INCLUDE_DIRS += $(U8GLIB_PATH)/csrc $(U8GLIB_PATH)/cppsrc
 
 
 #####
@@ -94,7 +107,7 @@ OBJDUMP = xtensa-lx106-elf-objdump
 
 DRIVER_OBJECTS_DIR = $(OBJECTS_DIR)/driver
 
-OBJECTS = $(foreach source,$(SOURCES),$(OBJECTS_DIR)/$(source:.c=.o))
+OBJECTS = $(foreach object,$(patsubst %.cpp,%.o,$(patsubst %.c,%.o,$(SOURCES))),$(OBJECTS_DIR)/$(object))
 DRIVER_OBJECTS = $(foreach source,$(DRIVER_SOURCES),$(DRIVER_OBJECTS_DIR)/$(source:.c=.o))
 
 ifndef VERBOSE_MAKE
@@ -106,6 +119,7 @@ SWITCHES += ICACHE_FLASH
 CFLAGS += -Isrc/
 CFLAGS += -I$(SDK)/include
 CFLAGS += -I$(SDK)/examples/driver_lib/include
+CFLAGS += $(foreach dir,$(INCLUDE_DIRS),-I$(dir))
 
 CFLAGS += -MMD
 CFLAGS += -Os
@@ -157,20 +171,20 @@ $(OBJECTS_DIR)/libdriver.a: $(DRIVER_OBJECTS)
 	@echo Building $@...
 	$(QUIET) $(AR) ru $@ $^
 
-$(OBJECTS_DIR)/%.o: src/%.cpp
+$(OBJECTS_DIR)/%.o: %.cpp
 	@echo Compiling $(notdir $<)...
 	@mkdir -p $(OBJECTS_DIR)
-	$(QUIET) $(CXX) $(CFLAGS) -MMD -o $@ -c $<
+	$(QUIET) $(CXX) $(CFLAGS) -o $@ -c $<
 
-$(OBJECTS_DIR)/%.o: src/%.c
+$(OBJECTS_DIR)/%.o: %.c
 	@echo Compiling $(notdir $<)...
 	@mkdir -p $(OBJECTS_DIR)
-	$(QUIET) $(CC) $(CFLAGS) -MMD -o $@ -c $<
+	$(QUIET) $(CC) $(CFLAGS) -o $@ -c $<
 
 $(DRIVER_OBJECTS_DIR)/%.o: $(SDK)/examples/driver_lib/driver/%.c
 	@echo Compiling $(notdir $<)...
 	@mkdir -p $(DRIVER_OBJECTS_DIR)
-	$(QUIET) $(CC) $(CFLAGS) -MMD -o $@ -c $<
+	$(QUIET) $(CC) $(CFLAGS) -o $@ -c $<
 
 $(IMAGE_FILE): $(OBJECTS_DIR)/libuser.a $(OBJECTS_DIR)/libdriver.a
 	@echo Linking $@...
@@ -234,5 +248,10 @@ flash: $(FLASH_BIN)
 .PHONY: test
 test:
 	@echo FLASH_SIZE: $(FLASH_SIZE), IMAGE_SIZE: $(IMAGE_SIZE)
+
+.PHONY: show-stuff
+show-stuff:
+	@echo VPATH: $(VPATH)
+	@echo OBJECTS: $(OBJECTS)
 	
 

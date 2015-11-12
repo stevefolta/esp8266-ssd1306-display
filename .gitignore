@@ -1,4 +1,5 @@
 objects
 *.bin 
 *.local
+*.log
 
