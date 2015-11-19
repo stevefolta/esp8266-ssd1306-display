@@ -8,6 +8,10 @@ extern "C" {
 }
 #include "log.h"
 
+enum {
+	i2c_address = 0x3c,
+	};
+
 
 ICACHE_FLASH_ATTR Display::Display()
 {
@@ -15,7 +19,6 @@ ICACHE_FLASH_ATTR Display::Display()
 	buffer = (char*) os_zalloc(buffer_size);
 
 	i2c_master_gpio_init();
-	i2c_master_init();
 	initialize();
 }
 
@@ -54,6 +57,18 @@ void ICACHE_FLASH_ATTR Display::display()
 			}
 		i2c_master_stop();
 		}
+}
+
+
+void ICACHE_FLASH_ATTR Display::turn_on()
+{
+	send_command(0xAF);
+}
+
+
+void ICACHE_FLASH_ATTR Display::turn_off()
+{
+	send_command(0xAE);
 }
 
 
@@ -122,7 +137,7 @@ void ICACHE_FLASH_ATTR Display::initialize()
 void ICACHE_FLASH_ATTR Display::i2c_start()
 {
 	i2c_master_start();
-	i2c_master_writeByte(0x3C << 1);
+	i2c_master_writeByte(i2c_address << 1);
 	if (!i2c_master_checkAck()) {
 		log("No ack from display!\n");
 		}

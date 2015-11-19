@@ -11,6 +11,9 @@ class Display {
 		void	fill();
 		void	display();
 
+		void	turn_on();
+		void	turn_off();
+
 		enum {
 			width = 128,
 			height = 64,

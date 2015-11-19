@@ -27,6 +27,16 @@ static void tick(void* arg)
 		display = new Display();
 		display->fill();
 		display->display();
+		display->turn_on();
+		}
+	else if (num_ticks > 10) {
+		static bool phase = false;
+		if (phase)
+			display->fill();
+		else
+			display->clear();
+		display->display();
+		phase = !phase;
 		}
 }
 
