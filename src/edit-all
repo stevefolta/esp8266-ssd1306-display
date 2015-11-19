@@ -1,4 +1,4 @@
 #!/bin/bash
 
-$EDITOR ../Makefile user_main.cpp config.h log.h edit-all
+$EDITOR ../Makefile user_main.cpp Display.{h,cpp} cpp.cpp sdk_missing.h config.h log.h edit-all
 

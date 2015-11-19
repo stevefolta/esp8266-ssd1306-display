@@ -1,12 +1,8 @@
-SOURCES := user_main.cpp
-DRIVER_SOURCES := uart.c
-
-# U8glib
-SOURCES += u8g_font.c u8g_rect.c U8glib.cpp
-SWITCHES += TENSILICA
+SOURCES := user_main.cpp Display.cpp cpp.cpp
+DRIVER_SOURCES := uart.c i2c_master.c
 
 # SDK header problems revealed by U8glib:
-SWITCHES += __have_long64=0 __int_fast64_t_defined=1
+# SWITCHES += __have_long64=0 __int_fast64_t_defined=1
 
 -include Makefile.local
 
@@ -20,12 +16,6 @@ VPATH += src
 
 # Project specific:
 
-ifndef U8GLIB_PATH
-	foo := $(error You must define U8GLIB_PATH in your Makefile.local.)
-endif
-
-VPATH += $(U8GLIB_PATH)/csrc $(U8GLIB_PATH)/cppsrc $(U8GLIB_PATH)/fntsrc
-INCLUDE_DIRS += $(U8GLIB_PATH)/csrc $(U8GLIB_PATH)/cppsrc
 
 
 #####
@@ -130,6 +120,8 @@ CFLAGS += -fno-inline-functions -ffunction-sections -fdata-sections
 CFLAGS += -mlongcalls -mtext-section-literals
 CFLAGS += $(foreach switch,$(SWITCHES),-D$(switch))
 
+CXXFLAGS += -fno-exceptions -fno-rtti
+
 EARLY_LINK_FLAGS = 	\
 	-L$(SDK)/lib 	\
 	-nostdlib 	\
@@ -174,7 +166,7 @@ $(OBJECTS_DIR)/libdriver.a: $(DRIVER_OBJECTS)
 $(OBJECTS_DIR)/%.o: %.cpp
 	@echo Compiling $(notdir $<)...
 	@mkdir -p $(OBJECTS_DIR)
-	$(QUIET) $(CXX) $(CFLAGS) -o $@ -c $<
+	$(QUIET) $(CXX) $(CFLAGS) $(CXXFLAGS) -o $@ -c $<
 
 $(OBJECTS_DIR)/%.o: %.c
 	@echo Compiling $(notdir $<)...
