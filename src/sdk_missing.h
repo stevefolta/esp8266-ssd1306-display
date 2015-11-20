@@ -16,6 +16,9 @@ extern void* pvPortRealloc(void* ptr, size_t size, const char* file, const char*
 extern void vPortFree(void* ptr, const char* file, const char* line);
 extern void ets_memset(void* ptr, int c, int size);
 
+extern void ets_isr_mask(uint32 mask);
+extern void ets_isr_unmask(uint32 mask);
+
 
 #endif
 

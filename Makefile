@@ -1,5 +1,5 @@
-SOURCES := user_main.cpp Display.cpp cpp.cpp
-DRIVER_SOURCES := uart.c i2c_master.c
+SOURCES := user_main.cpp Display.cpp cpp.cpp I2CMaster.cpp
+DRIVER_SOURCES := uart.c
 
 # SDK header problems revealed by U8glib:
 # SWITCHES += __have_long64=0 __int_fast64_t_defined=1

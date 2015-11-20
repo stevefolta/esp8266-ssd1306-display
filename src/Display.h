@@ -1,6 +1,8 @@
 #ifndef Display_h
 #define Display_h
 
+class I2CMaster;
+
 
 class Display {
 	public:
@@ -44,6 +46,7 @@ class Display {
 				int	first_char, num_chars, height;
 			};
 
+		I2CMaster* i2c;
 		char*	buffer;
 		Font	font;
 

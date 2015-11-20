@@ -1,26 +1,28 @@
 #include "Display.h"
+#include "I2CMaster.h"
+#include "FlashData.h"
 extern "C" {
 #include "ets_sys.h"
 #include "osapi.h"
 #include "sdk_missing.h"
 #include "mem.h"
-#include "driver/i2c_master.h"
 }
 #include "log.h"
+#include "config.h"
 
 #define PROGMEM ICACHE_RODATA_ATTR
 #include "third-party/SSD1306Fonts.h"
 
-inline uint8_t pgm_read_byte(const char* ptr)
-{
-	unsigned long offset = ((unsigned long) ptr) & 0x03;
-	const unsigned long* addr = (unsigned long*) (ptr - offset);
-	return *addr >> (offset * 8);
-}
-
 enum {
 	i2c_address = 0x3c,
 	};
+
+#ifndef DISPLAY_SDA_PIN
+	#define DISPLAY_SDA_PIN	2
+#endif
+#ifndef DISPLAY_SCL_PIN
+	#define DISPLAY_SCL_PIN	14
+#endif
 
 
 ICACHE_FLASH_ATTR Display::Display()
@@ -29,7 +31,7 @@ ICACHE_FLASH_ATTR Display::Display()
 	log("- Creating Display.\n");
 	buffer = (char*) os_zalloc(buffer_size);
 
-	i2c_master_gpio_init();
+	i2c = new I2CMaster(DISPLAY_SDA_PIN, DISPLAY_SCL_PIN);
 	initialize();
 }
 
@@ -37,6 +39,7 @@ ICACHE_FLASH_ATTR Display::Display()
 ICACHE_FLASH_ATTR Display::~Display()
 {
 	os_free(buffer);
+	delete(i2c);
 }
 
 
@@ -80,15 +83,13 @@ void ICACHE_FLASH_ATTR Display::display()
 	const char* stopper = buffer + buffer_size;
 	while (p < stopper) {
 		i2c_start();
-		i2c_master_writeByte(0x40);
-		if (!i2c_master_checkAck())
+		if (!i2c->send_byte(0x40))
 			log("No ack from display for data start!\n");
 		for (int x = 0; x < 16; ++x) {
-			i2c_master_writeByte(*p++);
-			if (!i2c_master_checkAck())
+			if (!i2c->send_byte(*p++))
 				log("No ack from display for data byte!\n");
 			}
-		i2c_master_stop();
+		i2c->end_transmission();
 		}
 }
 
@@ -169,11 +170,8 @@ void ICACHE_FLASH_ATTR Display::initialize()
 
 void ICACHE_FLASH_ATTR Display::i2c_start()
 {
-	i2c_master_start();
-	i2c_master_writeByte(i2c_address << 1);
-	if (!i2c_master_checkAck()) {
+	if (!i2c->start_transmission(i2c_address))
 		log("No ack from display!\n");
-		}
 }
 
 
@@ -181,13 +179,11 @@ void ICACHE_FLASH_ATTR Display::send_command(unsigned char command)
 {
 	log("- sending command 0x%02X.\n", command);
 	i2c_start();
-	i2c_master_writeByte(0x80);
-	if (!i2c_master_checkAck())
+	if (!i2c->send_byte(0x80))
 		log("No ack for command start!\n");
-	i2c_master_writeByte(command);
-	if (!i2c_master_checkAck())
+	if (!i2c->send_byte(command))
 		log("No ack for command 0x%02X!\n", command);
-	i2c_master_stop();
+	i2c->end_transmission();
 }
 
 
