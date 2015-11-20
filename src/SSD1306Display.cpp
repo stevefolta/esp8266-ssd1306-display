@@ -72,7 +72,8 @@ void ICACHE_FLASH_ATTR SSD1306Display::set_pixel(int x, int y)
 	if (x < 0 || x >= width || y < 0 || y >= height)
 		return;
 
-	// Apparently, the buffer is laid out sideways.
+	// The buffer is laid out in 8-row-high strips ("pages"), where a byte
+	// controls one *column* in the strip.
 	buffer[(y / 8) * width + x] |= 1 << (y & 0x07);
 }
 
@@ -110,57 +111,49 @@ void ICACHE_FLASH_ATTR SSD1306Display::initialize()
 {
 	log("- Display::initialize().\n");
 	static const char init_sequence[] = {
-		// This init sequence comes from
+		// This init sequence is based on
 		// <https://github.com/squix78/esp8266-oled-ssd1306/blob/master/ssd1306_i2c.cpp>,
 		// which in turn got it from
 		// <https://github.com/adafruit/Adafruit_SSD1306/blob/master/Adafruit_SSD1306.cpp>.
-		// Init sequence for 128x64 OLED module
-		0xae,		        // display off
-		0xa6,            // Set Normal Display (default)
-		0xAE,            // DISPLAYOFF
-		0xD5,            // SETDISPLAYCLOCKDIV
-		0x80,            // the suggested ratio 0x80
-		0xA8,            // SSD1306_SETMULTIPLEX
-		0x3F,
-		0xD3,            // SETDISPLAYOFFSET
-		0x0,             // no offset
-		0x40 | 0x0,      // SETSTARTLINE
-		0x8D,            // CHARGEPUMP
-		0x14,
-		0x20,             // MEMORYMODE
-		0x00,             // 0x0 act like ks0108
-
-		0xA0 | 0x1,      // SEGREMAP   // Rotate screen 180 deg
-		// 0xA0,
-
-		0xC8,            // COMSCANDEC  Rotate screen 180 Deg
-		// 0xC0,
-
-		0xDA,            // 0xDA
-		0x12,           // COMSCANDEC
-		0x81,           // SETCONTRAS
-		0xCF,           //
-		0xd9,          // SETPRECHARGE 
-		0xF1, 
-		0xDB,        // SETVCOMDETECT                
-		0x40,
-		0xA4,        // DISPLAYALLON_RESUME        
-		0xA6,        // NORMALDISPLAY             
-
-		0x2e,            // stop scroll
-		//----------------------------REVERSE comments----------------------------//
-		//  0xa0,		//seg re-map 0->127(default)
-		//  0xa1,		//seg re-map 127->0
-		//  0xc8,
-		//  delay(1000,
-		//----------------------------REVERSE comments----------------------------//
-		0xa7,  // Set Inverse Display  
-		// 0xae,		// display off
-		0x20,            // Set Memory Addressing Mode
-		0x00,            // Set Memory Addressing Mode ab Horizontal addressing mode
-		//0x02,         // Set Memory Addressing Mode ab Page addressing mode(RESET)  
-
-		0x00, 0x10, 0xB0, 	// Clear the start address, in case we reset in the middle of sending data.
+		// The "u8g_dev_ssd1306_128x64_adafruit3_init_seq" from
+		// <https://github.com/nodemcu/nodemcu-firmware/blob/master/app/u8glib/u8g_dev_ssd1306_128x64.c>
+		// was also consulted.  And of course, the datasheet:
+		// <https://www.adafruit.com/datasheets/SSD1306.pdf>.
+		// Display off.
+		0xAE,
+		// Clock divide ratio.
+		0xD5, 0x80,
+		// Multiplex ratio
+		0xA8, 0x3F,
+		// Display offset.
+		0xD3, 0x00,
+		// Start line.
+		0x40 | 0x00,
+		// Enable charge pump.
+		0x8D, 0x14,
+		// Memory addressing mode: horizontal.
+		0x20, 0x00,
+		// Segment remap: rotate screen 180 degrees.
+		// Use 0xA0 instead if your image is upside-down.
+		0xA1,
+		// COM output scan direction: rotate screen 180 degrees.
+		// Use 0xC0 instead if your image is upside-down.
+		0xC8,
+		// COM pins hardware configuration.
+		0xDA, 0x12,
+		// Contrast.
+		0x81, 0xCF,
+		// Pre-charge period.
+		0xD9, 0xF1,
+		// VcomH desselect level.
+		0xDB, 0x40,
+		// Stop scrolling.
+		0x2E,
+		// Black-on-white display.
+		0xA7,
+		// Clear the start address, in case the ESP8266 was reset in the middle
+		// of sending data.
+		0xB0, 0x00, 0x10,
 		};
 
 	const char* p = init_sequence;
