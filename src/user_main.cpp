@@ -92,10 +92,14 @@ void user_init(void)
 
 	display = new Display();
 
-	// Run the tick.
+	// Start the display.
 	os_timer_disarm(&word_timer);
+#ifdef DELAY_DISPLAY_START
 	os_timer_setfn(&word_timer, start_display, NULL);
 	os_timer_arm(&word_timer, 1000, false);
+#else
+	start_display(NULL);
+#endif
 }
 
 
