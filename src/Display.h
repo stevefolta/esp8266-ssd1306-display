@@ -9,6 +9,9 @@ class Display {
 
 		void	clear();
 		void	fill();
+		int	draw_string(const char* str, int x, int y);
+		int	string_width(const char* str);
+		void	set_pixel(int x, int y);
 		void	display();
 
 		void	turn_on();
@@ -21,7 +24,28 @@ class Display {
 			};
 
 	protected:
+		class Font {
+			public:
+				Font(const char* data_in);
+
+				int	width(const char* str);
+				int	render(const char* str, int x, int y, Display* display);
+
+			protected:
+				enum {
+					width_offset = 0,
+					height_offset,
+					first_char_offset,
+					num_chars_offset,
+					char_widths_offset,
+					};
+
+				const char*	data;
+				int	first_char, num_chars, height;
+			};
+
 		char*	buffer;
+		Font	font;
 
 		void	initialize();
 		void	i2c_start();

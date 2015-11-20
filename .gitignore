@@ -2,4 +2,5 @@ objects
 *.bin 
 *.local
 *.log
+tags
 

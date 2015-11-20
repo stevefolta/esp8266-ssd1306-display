@@ -8,12 +8,23 @@ extern "C" {
 }
 #include "log.h"
 
+#define PROGMEM ICACHE_RODATA_ATTR
+#include "third-party/SSD1306Fonts.h"
+
+inline uint8_t pgm_read_byte(const char* ptr)
+{
+	unsigned long offset = ((unsigned long) ptr) & 0x03;
+	const unsigned long* addr = (unsigned long*) (ptr - offset);
+	return *addr >> (offset * 8);
+}
+
 enum {
 	i2c_address = 0x3c,
 	};
 
 
 ICACHE_FLASH_ATTR Display::Display()
+	: font(ArialMT_Plain_24)
 {
 	log("- Creating Display.\n");
 	buffer = (char*) os_zalloc(buffer_size);
@@ -38,6 +49,28 @@ void ICACHE_FLASH_ATTR Display::clear()
 void ICACHE_FLASH_ATTR Display::fill()
 {
 	os_memset(buffer, 0xFF, buffer_size);
+}
+
+
+int ICACHE_FLASH_ATTR Display::draw_string(const char* str, int x, int y)
+{
+	return font.render(str, x, y, this);
+}
+
+
+int ICACHE_FLASH_ATTR Display::string_width(const char* str)
+{
+	return font.width(str);
+}
+
+
+void ICACHE_FLASH_ATTR Display::set_pixel(int x, int y)
+{
+	if (x < 0 || x >= width || y < 0 || y >= height)
+		return;
+
+	// Apparently, the buffer is laid out sideways.
+	buffer[(y / 8) * width + x] |= 1 << (y & 0x07);
 }
 
 
@@ -155,6 +188,67 @@ void ICACHE_FLASH_ATTR Display::send_command(unsigned char command)
 	if (!i2c_master_checkAck())
 		log("No ack for command 0x%02X!\n", command);
 	i2c_master_stop();
+}
+
+
+
+Display::Font::Font(const char* data_in)
+	: data(data_in)
+{
+	first_char = pgm_read_byte(data + first_char_offset);
+	num_chars = pgm_read_byte(data + num_chars_offset);
+	height = pgm_read_byte(data + height_offset);
+}
+
+int Display::Font::width(const char* str)
+{
+	int width = 0;
+	for (; *str; ++str) {
+		int char_index = *str - first_char;
+		if (char_index < num_chars)
+			width += pgm_read_byte(data + char_widths_offset + char_index);
+		}
+	return width;
+}
+
+
+int Display::Font::render(const char* str, int x, int y, Display* display)
+{
+	int total_width = 0;
+	for (; *str; ++str) {
+		int char_index = *str - first_char;
+		if (char_index >= num_chars)
+			continue;
+
+		// Find the start of the character's data.
+		const char* char_data = data + char_widths_offset + num_chars;
+		const char* width_ptr = data + char_widths_offset;
+		const char* stopper = width_ptr + char_index;
+		for (; width_ptr < stopper; ++width_ptr)
+			char_data += pgm_read_byte(width_ptr) * height / 8 + 1;
+
+		// Render the character.
+		int char_width = pgm_read_byte(data + char_widths_offset + char_index);
+		int row_y = y;
+		int row_y_stopper = y + height;
+		const char* bitmap = char_data;
+		char cur_byte = 0;
+		char mask = 0;
+		for (; row_y < row_y_stopper; ++row_y) {
+			for (int col = 0; col < char_width; ++col) {
+				if (mask == 0) {
+					mask = 0x01;
+					cur_byte = pgm_read_byte(bitmap);
+					bitmap += 1;
+					}
+				if (cur_byte & mask)
+					display->set_pixel(x + total_width + col, row_y);
+				mask <<= 1;
+				}
+			}
+		total_width += char_width;
+		}
+	return total_width;
 }
 
 
