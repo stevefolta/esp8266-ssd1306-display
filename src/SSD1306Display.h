@@ -1,13 +1,13 @@
-#ifndef Display_h
-#define Display_h
+#ifndef SSD1306Display_h
+#define SSD1306Display_h
 
 class I2CMaster;
 
 
-class Display {
+class SSD1306Display {
 	public:
-		Display();
-		~Display();
+		SSD1306Display();
+		~SSD1306Display();
 
 		void	clear();
 		void	fill();
@@ -31,7 +31,7 @@ class Display {
 				Font(const char* data_in);
 
 				int	width(const char* str);
-				int	render(const char* str, int x, int y, Display* display);
+				int	render(const char* str, int x, int y, SSD1306Display* display);
 
 			protected:
 				enum {
@@ -56,5 +56,5 @@ class Display {
 	};
 
 
-#endif	// !Display_h
+#endif	// !SSD1306Display_h
 

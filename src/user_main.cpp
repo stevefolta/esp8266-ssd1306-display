@@ -9,12 +9,12 @@ extern "C" {
 #include "sdk_missing.h"
 }
 
-#include "Display.h"
+#include "SSD1306Display.h"
 #include "log.h"
 
 #include "config.h"
 
-static Display* display;
+static SSD1306Display* display;
 static os_timer_t word_timer;
 
 struct Word {
@@ -90,7 +90,7 @@ void user_init(void)
 	config.bssid_set = 0;
 	bool ok = wifi_station_set_config(&config);
 
-	display = new Display();
+	display = new SSD1306Display();
 
 	// Start the display.
 	os_timer_disarm(&word_timer);

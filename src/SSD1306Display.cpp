@@ -1,4 +1,4 @@
-#include "Display.h"
+#include "SSD1306Display.h"
 #include "I2CMaster.h"
 #include "FlashData.h"
 extern "C" {
@@ -25,7 +25,7 @@ enum {
 #endif
 
 
-ICACHE_FLASH_ATTR Display::Display()
+ICACHE_FLASH_ATTR SSD1306Display::SSD1306Display()
 	: font(ArialMT_Plain_24)
 {
 	log("- Creating Display.\n");
@@ -36,38 +36,38 @@ ICACHE_FLASH_ATTR Display::Display()
 }
 
 
-ICACHE_FLASH_ATTR Display::~Display()
+ICACHE_FLASH_ATTR SSD1306Display::~SSD1306Display()
 {
 	os_free(buffer);
 	delete(i2c);
 }
 
 
-void ICACHE_FLASH_ATTR Display::clear()
+void ICACHE_FLASH_ATTR SSD1306Display::clear()
 {
 	os_memset(buffer, 0, buffer_size);
 }
 
 
-void ICACHE_FLASH_ATTR Display::fill()
+void ICACHE_FLASH_ATTR SSD1306Display::fill()
 {
 	os_memset(buffer, 0xFF, buffer_size);
 }
 
 
-int ICACHE_FLASH_ATTR Display::draw_string(const char* str, int x, int y)
+int ICACHE_FLASH_ATTR SSD1306Display::draw_string(const char* str, int x, int y)
 {
 	return font.render(str, x, y, this);
 }
 
 
-int ICACHE_FLASH_ATTR Display::string_width(const char* str)
+int ICACHE_FLASH_ATTR SSD1306Display::string_width(const char* str)
 {
 	return font.width(str);
 }
 
 
-void ICACHE_FLASH_ATTR Display::set_pixel(int x, int y)
+void ICACHE_FLASH_ATTR SSD1306Display::set_pixel(int x, int y)
 {
 	if (x < 0 || x >= width || y < 0 || y >= height)
 		return;
@@ -77,7 +77,7 @@ void ICACHE_FLASH_ATTR Display::set_pixel(int x, int y)
 }
 
 
-void ICACHE_FLASH_ATTR Display::display()
+void ICACHE_FLASH_ATTR SSD1306Display::display()
 {
 	const char* p = buffer;
 	const char* stopper = buffer + buffer_size;
@@ -94,19 +94,19 @@ void ICACHE_FLASH_ATTR Display::display()
 }
 
 
-void ICACHE_FLASH_ATTR Display::turn_on()
+void ICACHE_FLASH_ATTR SSD1306Display::turn_on()
 {
 	send_command(0xAF);
 }
 
 
-void ICACHE_FLASH_ATTR Display::turn_off()
+void ICACHE_FLASH_ATTR SSD1306Display::turn_off()
 {
 	send_command(0xAE);
 }
 
 
-void ICACHE_FLASH_ATTR Display::initialize()
+void ICACHE_FLASH_ATTR SSD1306Display::initialize()
 {
 	log("- Display::initialize().\n");
 	static const char init_sequence[] = {
@@ -170,14 +170,14 @@ void ICACHE_FLASH_ATTR Display::initialize()
 }
 
 
-void ICACHE_FLASH_ATTR Display::i2c_start()
+void ICACHE_FLASH_ATTR SSD1306Display::i2c_start()
 {
 	if (!i2c->start_transmission(i2c_address))
 		log("No ack from display!\n");
 }
 
 
-void ICACHE_FLASH_ATTR Display::send_command(unsigned char command)
+void ICACHE_FLASH_ATTR SSD1306Display::send_command(unsigned char command)
 {
 	log("- sending command 0x%02X.\n", command);
 	i2c_start();
@@ -190,7 +190,7 @@ void ICACHE_FLASH_ATTR Display::send_command(unsigned char command)
 
 
 
-Display::Font::Font(const char* data_in)
+SSD1306Display::Font::Font(const char* data_in)
 	: data(data_in)
 {
 	first_char = pgm_read_byte(data + first_char_offset);
@@ -198,7 +198,7 @@ Display::Font::Font(const char* data_in)
 	height = pgm_read_byte(data + height_offset);
 }
 
-int Display::Font::width(const char* str)
+int SSD1306Display::Font::width(const char* str)
 {
 	int width = 0;
 	for (; *str; ++str) {
@@ -210,7 +210,7 @@ int Display::Font::width(const char* str)
 }
 
 
-int Display::Font::render(const char* str, int x, int y, Display* display)
+int SSD1306Display::Font::render(const char* str, int x, int y, SSD1306Display* display)
 {
 	int total_width = 0;
 	for (; *str; ++str) {
