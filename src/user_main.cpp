@@ -15,23 +15,64 @@ extern "C" {
 #include "config.h"
 
 static Display* display;
-static os_timer_t tick_timer;
+static os_timer_t word_timer;
 
+struct Word {
+	const char* word;
+	int ms;
+	};
 
-static void tick(void* arg)
+enum {
+	default_word_ms = 150,
+	sentence_word_ms = 1000,
+	};
+
+static Word words[] = {
+	{ "This", default_word_ms },
+	{ "is", default_word_ms },
+	{ "an", default_word_ms },
+	{ "ESP8266", default_word_ms },
+	{ "running", default_word_ms },
+	{ "an", default_word_ms },
+	{ "OLED", default_word_ms },
+	{ "display.", sentence_word_ms },
+	};
+
+static void next_word(void* arg)
 {
-	log("tick()...\n");
+	static int which_word = 0;
+	static const int num_words = sizeof(words) / sizeof(words[0]);
+	const Word* word = &words[which_word];
 
-	static int num_ticks = 0;
-	static const int display_start_tick = 2;
-	if (num_ticks++ == display_start_tick) {
-		display->clear();
-		const char* word = "Hello!";
-		display->draw_string(
-			word, (display->width - display->string_width(word)) / 2, 18);
-		display->display();
-		display->turn_on();
-		}
+	// Show the word.
+	display->clear();
+	display->draw_string(
+		word->word,
+		(display->width - display->string_width(word->word)) / 2, 18);
+	display->display();
+
+	// Go to the next word.
+	which_word += 1;
+	if (which_word >= num_words)
+		which_word = 0;
+
+	// Rest the timer to show the next word.
+	os_timer_setfn(&word_timer, next_word, NULL);
+	os_timer_arm(&word_timer, word->ms, false);
+}
+
+
+static void start_display(void* arg)
+{
+	display->clear();
+	const char* word = "Hello!";
+	display->draw_string(
+		word, (display->width - display->string_width(word)) / 2, 18);
+	display->display();
+	display->turn_on();
+
+	os_timer_setfn(&word_timer, next_word, NULL);
+	os_timer_arm(&word_timer, 1000, false);
 }
 
 
@@ -52,9 +93,9 @@ void user_init(void)
 	display = new Display();
 
 	// Run the tick.
-	os_timer_disarm(&tick_timer);
-	os_timer_setfn(&tick_timer, tick, NULL);
-	os_timer_arm(&tick_timer, 1000, true);
+	os_timer_disarm(&word_timer);
+	os_timer_setfn(&word_timer, start_display, NULL);
+	os_timer_arm(&word_timer, 1000, false);
 }
 
 
