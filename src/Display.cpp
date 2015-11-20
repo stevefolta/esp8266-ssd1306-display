@@ -96,11 +96,11 @@ void ICACHE_FLASH_ATTR Display::initialize()
 		0x20,             // MEMORYMODE
 		0x00,             // 0x0 act like ks0108
 
-		//0xA0 | 0x1,      // SEGREMAP   // Rotate screen 180 deg
-		0xA0,
+		0xA0 | 0x1,      // SEGREMAP   // Rotate screen 180 deg
+		// 0xA0,
 
-		//0xC8,            // COMSCANDEC  Rotate screen 180 Deg
-		0xC0,
+		0xC8,            // COMSCANDEC  Rotate screen 180 Deg
+		// 0xC0,
 
 		0xDA,            // 0xDA
 		0x12,           // COMSCANDEC
@@ -120,7 +120,7 @@ void ICACHE_FLASH_ATTR Display::initialize()
 		//  0xc8,
 		//  delay(1000,
 		//----------------------------REVERSE comments----------------------------//
-		// 0xa7,  // Set Inverse Display  
+		0xa7,  // Set Inverse Display  
 		// 0xae,		// display off
 		0x20,            // Set Memory Addressing Mode
 		0x00,            // Set Memory Addressing Mode ab Horizontal addressing mode
