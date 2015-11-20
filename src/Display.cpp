@@ -159,6 +159,8 @@ void ICACHE_FLASH_ATTR Display::initialize()
 		0x20,            // Set Memory Addressing Mode
 		0x00,            // Set Memory Addressing Mode ab Horizontal addressing mode
 		//0x02,         // Set Memory Addressing Mode ab Page addressing mode(RESET)  
+
+		0x00, 0x10, 0xB0, 	// Clear the start address, in case we reset in the middle of sending data.
 		};
 
 	const char* p = init_sequence;
