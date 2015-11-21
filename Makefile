@@ -1,6 +1,7 @@
 SOURCES := user_main.cpp SSD1306Display.cpp I2CMaster.cpp WordParser.cpp
 SOURCES += cpp.cpp
 DRIVER_SOURCES := uart.c
+APP_NAME := display
 
 # SDK header problems revealed by U8glib:
 # SWITCHES += __have_long64=0 __int_fast64_t_defined=1
@@ -141,8 +142,12 @@ LATE_LINK_FLAGS = 	\
 BIN_NAME = user$(APP).$(FLASH_SIZE).$(BOOT).$(SPI_SIZE_MAP)
 IMAGE_FILE_NAME := image$(APP).$(BOOT).$(SPI_SIZE_MAP).out
 IMAGE_FILE := $(OBJECTS_DIR)/$(IMAGE_FILE_NAME)
+ifndef APP_NAME
+	APP_NAME := $(BIN_NAME)
+endif
 ifeq "$(APP)" "0"
-	FLASH_BIN := eagle.flash.bin
+	FLASH_BIN := $(APP_NAME)-0x00000.bin
+	FLASH_TEXT_BIN := $(APP_NAME)-0x40000.bin
 else
 	FLASH_BIN := $(BIN_NAME).bin
 endif
@@ -208,12 +213,12 @@ endif
 	@# Call gen_appbin.py and deal with its output.
 ifeq "$(APP)" "0"
 	$(QUIET) cd $(OBJECTS_DIR) && COMPILE=gcc python $(SDK)/tools/gen_appbin.py $(IMAGE_FILE_NAME) 0 $(SPI_MODE_NUM) $(FREQ_DIV) $(SPI_SIZE_MAP)
-	@mv $(OBJECTS_DIR)/eagle.app.flash.bin eagle.flash.bin
-	@mv $(OBJECTS_DIR)/eagle.app.v6.irom0text.bin eagle.irom0text.bin
+	@mv $(OBJECTS_DIR)/eagle.app.flash.bin $(FLASH_BIN)
+	@mv $(OBJECTS_DIR)/eagle.app.v6.irom0text.bin $(FLASH_TEXT_BIN)
 	@rm $(OBJECTS_DIR)/eagle.app.v6.*
 	@echo "No separate bootloader needed."
-	@echo "Flash eagle.flash.bin to 0x00000."
-	@echo "Flash eagle.irom0text.bin to 0x40000."
+	@echo "Flash $(FLASH_BIN) to 0x00000."
+	@echo "Flash $(FLASH_TEXT_BIN) to 0x40000."
 else
 ifneq "$(BOOT)" "new"
 		$(QUIET) cd $(OBJECTS_DIR) && COMPILE=gcc python $(SDK)/tools/gen_appbin.py $(IMAGE_FILE_NAME) 1 $(SPI_MODE_NUM) $(FREQ_DIV) $(SPI_SIZE_MAP)
@@ -235,7 +240,7 @@ clean:
 
 .PHONY: flash
 flash: $(FLASH_BIN)
-	flash-esp 0x00000 eagle.flash.bin 0x40000 eagle.irom0text.bin
+	flash-esp 0x00000 $(FLASH_BIN) 0x40000 $(FLASH_TEXT_BIN)
 
 
 .PHONY: test
