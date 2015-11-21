@@ -145,7 +145,7 @@ void ICACHE_FLASH_ATTR SSD1306Display::initialize()
 		0x81, 0xCF,
 		// Pre-charge period.
 		0xD9, 0xF1,
-		// VcomH desselect level.
+		// VcomH deselect level.
 		0xDB, 0x40,
 		// Stop scrolling.
 		0x2E,
