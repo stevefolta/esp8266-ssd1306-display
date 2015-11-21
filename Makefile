@@ -1,4 +1,4 @@
-SOURCES := user_main.cpp SSD1306Display.cpp I2CMaster.cpp WordParser.cpp
+SOURCES := user_main.cpp WordDisplay.cpp SSD1306Display.cpp I2CMaster.cpp WordParser.cpp
 SOURCES += cpp.cpp
 DRIVER_SOURCES := uart.c
 APP_NAME := display

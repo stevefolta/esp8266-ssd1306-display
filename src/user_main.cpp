@@ -10,12 +10,14 @@ extern "C" {
 }
 
 #include "SSD1306Display.h"
+#include "WordDisplay.h"
 #include "WordParser.h"
 #include "log.h"
 
 #include "config.h"
 
-static SSD1306Display* display = 0;
+static SSD1306Display* oled_display = 0;
+static WordDisplay* display = 0;
 static WordParser* words = 0;
 static os_timer_t word_timer;
 
@@ -38,8 +40,7 @@ static void next_word(void* arg)
 	if (words == NULL) {
 		// Show blank, and set up the text (again).
 		words = new WordParser(wiki_text);
-		display->clear();
-		display->display();
+		display->show("");
 		os_timer_setfn(&word_timer, next_word, NULL);
 		os_timer_arm(&word_timer, sentence_word_ms, false);
 		return;
@@ -57,11 +58,7 @@ static void next_word(void* arg)
 		}
 
 	// Show the word.
-	display->clear();
-	display->draw_string(
-		word,
-		(display->width - display->string_width(word)) / 2, 18);
-	display->display();
+	display->show(word);
 
 	// Rest the timer to show the next word.
 	int ms = default_word_ms;
@@ -79,12 +76,9 @@ static void next_word(void* arg)
 
 static void start_display(void* arg)
 {
-	display->clear();
 	const char* word = "Hello!";
-	display->draw_string(
-		word, (display->width - display->string_width(word)) / 2, 18);
-	display->display();
-	display->turn_on();
+	display->show(word);
+	oled_display->turn_on();
 
 	os_timer_setfn(&word_timer, next_word, NULL);
 	os_timer_arm(&word_timer, 1000, false);
@@ -105,7 +99,8 @@ void user_init(void)
 	config.bssid_set = 0;
 	bool ok = wifi_station_set_config(&config);
 
-	display = new SSD1306Display();
+	oled_display = new SSD1306Display();
+	display = new WordDisplay(oled_display);
 
 	// Start the display.
 	os_timer_disarm(&word_timer);
