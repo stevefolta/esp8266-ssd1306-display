@@ -21,7 +21,7 @@ inline void make_pin_gpio(int pin) {
 		function);
 	}
 
-I2CMaster::I2CMaster(int sda_pin_in, int scl_pin_in)
+ICACHE_FLASH_ATTR I2CMaster::I2CMaster(int sda_pin_in, int scl_pin_in)
 	: sda_pin(sda_pin_in), scl_pin(scl_pin_in)
 {
 	// Set up the pins.
@@ -50,7 +50,7 @@ I2CMaster::I2CMaster(int sda_pin_in, int scl_pin_in)
 }
 
 
-bool I2CMaster::start_transmission(unsigned char i2c_addr)
+ICACHE_FLASH_ATTR bool I2CMaster::start_transmission(unsigned char i2c_addr)
 {
 	// Start bit.
 	setDC(true, true);
@@ -63,7 +63,7 @@ bool I2CMaster::start_transmission(unsigned char i2c_addr)
 }
 
 
-void I2CMaster::end_transmission()
+ICACHE_FLASH_ATTR void I2CMaster::end_transmission()
 {
 	setDC(false, false);
 	wait();
@@ -75,7 +75,7 @@ void I2CMaster::end_transmission()
 }
 
 
-bool I2CMaster::send_byte(unsigned char byte)
+ICACHE_FLASH_ATTR bool I2CMaster::send_byte(unsigned char byte)
 {
 	setDC(last_sda, false);
 	wait();
@@ -104,7 +104,7 @@ bool I2CMaster::send_byte(unsigned char byte)
 }
 
 
-void I2CMaster::setDC(bool sda, bool scl)
+ICACHE_FLASH_ATTR void I2CMaster::setDC(bool sda, bool scl)
 {
 	uint32 sda_mask = 1 << sda_pin;
 	uint32 scl_mask = 1 << scl_pin;
@@ -124,7 +124,7 @@ void I2CMaster::setDC(bool sda, bool scl)
 }
 
 
-bool I2CMaster::getSDA()
+ICACHE_FLASH_ATTR bool I2CMaster::getSDA()
 {
 	return GPIO_INPUT_GET(GPIO_ID_PIN(sda_pin));
 }

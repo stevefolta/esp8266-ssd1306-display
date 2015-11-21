@@ -1,8 +1,11 @@
 #include "WordParser.h"
 #include <string.h>
+extern "C" {
+#include "ets_sys.h"
+}
 
 
-WordParser::WordParser(const char* text_in, int text_length)
+ICACHE_FLASH_ATTR WordParser::WordParser(const char* text_in, int text_length)
 	: text(text_in), is_at_sentence_end(false), is_at_paragraph_end(false)
 {
 	if (text_length < 0)
@@ -12,7 +15,7 @@ WordParser::WordParser(const char* text_in, int text_length)
 }
 
 
-void WordParser::get_next_word(char* word_out, int size)
+ICACHE_FLASH_ATTR void WordParser::get_next_word(char* word_out, int size)
 {
 	char c;
 	char* out_end = word_out + size - 1;
@@ -76,7 +79,7 @@ void WordParser::get_next_word(char* word_out, int size)
 }
 
 
-bool WordParser::at_text_end()
+ICACHE_FLASH_ATTR bool WordParser::at_text_end()
 {
 	return text >= end;
 }
