@@ -10,11 +10,13 @@ extern "C" {
 }
 
 #include "SSD1306Display.h"
+#include "WordParser.h"
 #include "log.h"
 
 #include "config.h"
 
-static SSD1306Display* display;
+static SSD1306Display* display = 0;
+static WordParser* words = 0;
 static os_timer_t word_timer;
 
 struct Word {
@@ -25,40 +27,53 @@ struct Word {
 enum {
 	default_word_ms = 150,
 	sentence_word_ms = 1000,
+	text_end_ms = 2000,
 	};
 
-static Word words[] = {
-	{ "This", default_word_ms },
-	{ "is", default_word_ms },
-	{ "an", default_word_ms },
-	{ "ESP8266", default_word_ms },
-	{ "running", default_word_ms },
-	{ "an", default_word_ms },
-	{ "OLED", default_word_ms },
-	{ "display.", sentence_word_ms },
-	};
+static const char text[] = "This is an ESP8266 running an OLED display.";
+#include "wiki.h"
 
 static void next_word(void* arg)
 {
-	static int which_word = 0;
-	static const int num_words = sizeof(words) / sizeof(words[0]);
-	const Word* word = &words[which_word];
+	if (words == NULL) {
+		// Show blank, and set up the text (again).
+		words = new WordParser(wiki_text);
+		display->clear();
+		display->display();
+		os_timer_setfn(&word_timer, next_word, NULL);
+		os_timer_arm(&word_timer, sentence_word_ms, false);
+		return;
+		}
+
+	char word[32];
+	static bool shown_para_break = false;
+	if (words->at_paragraph_end() && !shown_para_break) {
+		word[0] = 0;
+		shown_para_break = true;
+		}
+	else {
+		words->get_next_word(word, 32);
+		shown_para_break = false;
+		}
 
 	// Show the word.
 	display->clear();
 	display->draw_string(
-		word->word,
-		(display->width - display->string_width(word->word)) / 2, 18);
+		word,
+		(display->width - display->string_width(word)) / 2, 18);
 	display->display();
 
-	// Go to the next word.
-	which_word += 1;
-	if (which_word >= num_words)
-		which_word = 0;
-
 	// Rest the timer to show the next word.
+	int ms = default_word_ms;
+	if (words->at_text_end()) {
+		ms = text_end_ms;
+		delete words;
+		words = 0;
+		}
+	else if (words->at_sentence_end())
+		ms = sentence_word_ms;
 	os_timer_setfn(&word_timer, next_word, NULL);
-	os_timer_arm(&word_timer, word->ms, false);
+	os_timer_arm(&word_timer, ms, false);
 }
 
 

@@ -1,4 +1,5 @@
-SOURCES := user_main.cpp SSD1306Display.cpp cpp.cpp I2CMaster.cpp
+SOURCES := user_main.cpp SSD1306Display.cpp I2CMaster.cpp WordParser.cpp
+SOURCES += cpp.cpp
 DRIVER_SOURCES := uart.c
 
 # SDK header problems revealed by U8glib:

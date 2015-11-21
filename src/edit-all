@@ -1,4 +1,7 @@
 #!/bin/bash
 
-$EDITOR ../Makefile user_main.cpp SSD1306Display.{h,cpp} I2CMaster.{h,cpp} cpp.cpp sdk_missing.h config.h log.h edit-all
+$EDITOR 	\
+	../Makefile user_main.cpp 	\
+	SSD1306Display.{h,cpp} I2CMaster.{h,cpp} WordParser.{h,cpp} 	\
+	cpp.cpp sdk_missing.h config.h log.h edit-all
 

@@ -1,0 +1,26 @@
+const char* wiki_text =
+"The ESP8266 is a microcontroller from Chinese manufacturer Espressif that "
+"includes Wi-Fi capability.\n"
+"\n"
+"The chip first came to the attention of western makers in August 2014 with the "
+"ESP-01. This small board allows microcontrollers to connect to a Wi-Fi network "
+"and make simple TCP/IP connections using Hayes-style commands. However, at the "
+"time there was almost no English-language documentation on the chip and the "
+"commands it accepted. The very low price and the fact that there were very "
+"little external components on the module which suggests that it could "
+"eventually be very inexpensive in volume, attracted many hackers to explore the "
+"module, chip, and the software on it, as well as to translate the Chinese "
+"documentation.\n"
+"\n"
+"In late October 2014, Espressif released a software development kit (SDK) that "
+"allowed the chip to be programmed, removing the need for a separate "
+"microcontroller. Since then, there have been many official SDK releases from "
+"Espressif; Espressif maintains two versions of the SDK — one that is based on "
+"RTOS and the other, based on callbacks.\n"
+"\n"
+"An alternative to Espressif's official SDK is the open source esp-open-sdk that "
+"is based on the GCC toolchain. ESP8266 uses the Cadence Tensilica LX106 "
+"microcontroller and the GCC toolchain is open-sourced and maintained by Max "
+"Filippov.\n";
+
+
