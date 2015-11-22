@@ -15,6 +15,7 @@ class SSD1306Display {
 		int	string_width(const char* str);
 		void	set_pixel(int x, int y);
 		void	display();
+		void	set_font_size(int size);
 
 		void	turn_on();
 		void	turn_off();

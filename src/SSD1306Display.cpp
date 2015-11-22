@@ -95,6 +95,17 @@ void ICACHE_FLASH_ATTR SSD1306Display::display()
 }
 
 
+void ICACHE_FLASH_ATTR SSD1306Display::set_font_size(int size)
+{
+	if (size >= 24)
+		font = ArialMT_Plain_24;
+	else if (size >= 16)
+		font = ArialMT_Plain_16;
+	else
+		font = ArialMT_Plain_10;
+}
+
+
 void ICACHE_FLASH_ATTR SSD1306Display::turn_on()
 {
 	send_command(0xAF);

@@ -19,6 +19,7 @@ class WordDisplay {
 		{
 			show_text(text, -1, done_fn, done_arg);
 		}
+		void	set_font_size(int size);
 
 	protected:
 		SSD1306Display*	oled_display;
@@ -26,6 +27,7 @@ class WordDisplay {
 		bool shown_para_break;
 		void	(*text_done_fn)(void* arg);
 		void*	text_done_arg;
+		int y;
 
 		void	next_word();
 		static void	next_word_fn(void* arg);

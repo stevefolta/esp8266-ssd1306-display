@@ -18,6 +18,7 @@ ICACHE_FLASH_ATTR WordDisplay::WordDisplay(SSD1306Display* oled_display_in)
 	: oled_display(oled_display_in), words(0)
 {
 	os_timer_disarm(&text_timer);
+	set_font_size(24);
 }
 
 
@@ -32,7 +33,7 @@ void ICACHE_FLASH_ATTR WordDisplay::show(const char* word)
 {
 	oled_display->clear();
 	oled_display->draw_string(
-		word, (oled_display->width - oled_display->string_width(word)) / 2, 18);
+		word, (oled_display->width - oled_display->string_width(word)) / 2, y);
 	oled_display->display();
 }
 
@@ -47,6 +48,25 @@ void ICACHE_FLASH_ATTR WordDisplay::show_text(
 	words = new WordParser(text, text_length);
 	shown_para_break = false;
 	next_word();
+}
+
+
+void ICACHE_FLASH_ATTR WordDisplay::set_font_size(int size)
+{
+	switch (size) {
+		case 10:
+			y = 24;
+			break;
+		case 16:
+			y = 22;
+			break;
+		case 24:
+		default:
+			size = 24;
+			y = 18;
+			break;
+		}
+	oled_display->set_font_size(size);
 }
 
 
