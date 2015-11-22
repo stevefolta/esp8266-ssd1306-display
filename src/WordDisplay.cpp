@@ -9,7 +9,7 @@ extern "C" {
 
 
 enum {
-	word_ms = 150,
+	word_ms = 140,
 	sentence_ms = 1000,
 	text_end_ms = 2000,
 	};
