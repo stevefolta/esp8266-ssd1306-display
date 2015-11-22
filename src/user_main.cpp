@@ -18,70 +18,36 @@ extern "C" {
 
 static SSD1306Display* oled_display = 0;
 static WordDisplay* display = 0;
-static WordParser* words = 0;
-static os_timer_t word_timer;
-
-struct Word {
-	const char* word;
-	int ms;
-	};
-
-enum {
-	default_word_ms = 150,
-	sentence_word_ms = 1000,
-	text_end_ms = 2000,
-	};
+static os_timer_t timer;
 
 static const char text[] = "This is an ESP8266 running an OLED display.";
 #include "wiki.h"
 
-static void next_word(void* arg)
+static void between_text(void* arg);
+
+static void ICACHE_FLASH_ATTR show_text(void* arg)
 {
-	if (words == NULL) {
-		// Show blank, and set up the text (again).
-		words = new WordParser(wiki_text);
-		display->show("");
-		os_timer_setfn(&word_timer, next_word, NULL);
-		os_timer_arm(&word_timer, sentence_word_ms, false);
-		return;
-		}
-
-	char word[32];
-	static bool shown_para_break = false;
-	if (words->at_paragraph_end() && !shown_para_break) {
-		word[0] = 0;
-		shown_para_break = true;
-		}
-	else {
-		words->get_next_word(word, 32);
-		shown_para_break = false;
-		}
-
-	// Show the word.
-	display->show(word);
-
-	// Rest the timer to show the next word.
-	int ms = default_word_ms;
-	if (words->at_text_end()) {
-		ms = text_end_ms;
-		delete words;
-		words = 0;
-		}
-	else if (words->at_sentence_end())
-		ms = sentence_word_ms;
-	os_timer_setfn(&word_timer, next_word, NULL);
-	os_timer_arm(&word_timer, ms, false);
+	display->show_text(wiki_text, between_text, NULL);
 }
 
 
-static void start_display(void* arg)
+static void ICACHE_FLASH_ATTR between_text(void* arg)
+{
+	display->show("");
+
+	os_timer_setfn(&timer, show_text, NULL);
+	os_timer_arm(&timer, 1000, false);
+}
+
+
+static void ICACHE_FLASH_ATTR start_display(void* arg)
 {
 	const char* word = "Hello!";
 	display->show(word);
 	oled_display->turn_on();
 
-	os_timer_setfn(&word_timer, next_word, NULL);
-	os_timer_arm(&word_timer, 1000, false);
+	os_timer_setfn(&timer, between_text, NULL);
+	os_timer_arm(&timer, 1000, false);
 }
 
 
@@ -103,10 +69,10 @@ void user_init(void)
 	display = new WordDisplay(oled_display);
 
 	// Start the display.
-	os_timer_disarm(&word_timer);
+	os_timer_disarm(&timer);
 #ifdef DELAY_DISPLAY_START
-	os_timer_setfn(&word_timer, start_display, NULL);
-	os_timer_arm(&word_timer, 1000, false);
+	os_timer_setfn(&timer, start_display, NULL);
+	os_timer_arm(&timer, 1000, false);
 #else
 	start_display(NULL);
 #endif
