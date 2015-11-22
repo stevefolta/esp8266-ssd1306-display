@@ -63,9 +63,20 @@ static void ICACHE_FLASH_ATTR check_connection(void* arg)
 		display->show(msg);
 		schedule(between_text, 3000);
 		}
-	else {
+	else if (status == STATION_CONNECTING) {
 		display->show("Connecting...");
 		schedule(check_connection, 500);
+		}
+	else {
+		const char* msg = "Unknown";
+		if (status == STATION_WRONG_PASSWORD)
+			msg = "Bad password.";
+		else if (status == STATION_NO_AP_FOUND)
+			msg = "No access point.";
+		else if (status == STATION_CONNECT_FAIL)
+			msg = "Failed.";
+		display->show(msg);
+		schedule(between_text, 3000);
 		}
 }
 
