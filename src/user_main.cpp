@@ -49,6 +49,8 @@ static void ICACHE_FLASH_ATTR check_connection(void* arg)
 {
 	display->set_font_size(16);
 
+	static int retries = 0;
+
 	uint8 status = wifi_station_get_connect_status();
 	if (status == STATION_GOT_IP) {
 		char msg[32];
@@ -64,7 +66,14 @@ static void ICACHE_FLASH_ATTR check_connection(void* arg)
 		schedule(between_text, 3000);
 		}
 	else if (status == STATION_CONNECTING) {
+		retries = 0;
 		display->show("Connecting...");
+		schedule(check_connection, 500);
+		}
+	else if (status == STATION_WRONG_PASSWORD && ++retries < 10) {
+		// It seems to report STATION_WRONG_PASSWORD while it's sending the
+		// password.  So we give it a few seconds to exit that state before we
+		// believe that the password is actually bad.
 		schedule(check_connection, 500);
 		}
 	else {
