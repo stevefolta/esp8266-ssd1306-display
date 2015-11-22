@@ -4,7 +4,8 @@
 // Espressif's SDK doesn't declare a lot of functions.  C doesn't really care,
 // but C++ does.
 
-extern int os_printf_plus(const char * format, ...);
+extern int os_printf_plus(const char* format, ...);
+extern int ets_sprintf(char* str, const char* format, ...);
 
 extern void ets_timer_arm_new(ETSTimer* timer, uint32_t milliseconds, bool repeat_flag, int us);
 extern void ets_timer_disarm(ETSTimer* timer);

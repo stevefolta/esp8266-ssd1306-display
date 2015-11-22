@@ -25,6 +25,12 @@ static const char text[] = "This is an ESP8266 running an OLED display.";
 
 static void between_text(void* arg);
 
+static void ICACHE_FLASH_ATTR schedule(void (*fn)(void*), int ms)
+{
+	os_timer_setfn(&timer, fn, NULL);
+	os_timer_arm(&timer, ms, false);
+}
+
 static void ICACHE_FLASH_ATTR show_text(void* arg)
 {
 	display->show_text(wiki_text, between_text, NULL);
@@ -33,10 +39,34 @@ static void ICACHE_FLASH_ATTR show_text(void* arg)
 
 static void ICACHE_FLASH_ATTR between_text(void* arg)
 {
+	display->set_font_size(24);
 	display->show("");
+	schedule(show_text, 1000);
+}
 
-	os_timer_setfn(&timer, show_text, NULL);
-	os_timer_arm(&timer, 1000, false);
+
+static void ICACHE_FLASH_ATTR check_connection(void* arg)
+{
+	display->set_font_size(16);
+
+	uint8 status = wifi_station_get_connect_status();
+	if (status == STATION_GOT_IP) {
+		char msg[32];
+		struct ip_info ip_info;
+		bool ok = wifi_get_ip_info(0, &ip_info);
+		if (ok) {
+			os_sprintf(
+				msg, "%d.%d.%d.%d", IP2STR(&ip_info.ip));
+			}
+		else
+			os_sprintf(msg, "Problem.");
+		display->show(msg);
+		schedule(between_text, 3000);
+		}
+	else {
+		display->show("Connecting...");
+		schedule(check_connection, 500);
+		}
 }
 
 
@@ -46,8 +76,7 @@ static void ICACHE_FLASH_ATTR start_display(void* arg)
 	display->show(word);
 	oled_display->turn_on();
 
-	os_timer_setfn(&timer, between_text, NULL);
-	os_timer_arm(&timer, 1000, false);
+	schedule(check_connection, 1000);
 }
 
 
@@ -71,8 +100,7 @@ void user_init(void)
 	// Start the display.
 	os_timer_disarm(&timer);
 #ifdef DELAY_DISPLAY_START
-	os_timer_setfn(&timer, start_display, NULL);
-	os_timer_arm(&timer, 1000, false);
+	schedule(start_display, 1000);
 #else
 	start_display(NULL);
 #endif
