@@ -3,6 +3,9 @@
 $EDITOR 	\
 	../Makefile user_main.cpp 	\
 	WordDisplay.{h,cpp} SSD1306Display.{h,cpp} I2CMaster.{h,cpp} 	\
-	WordParser.{h,cpp} 	\
-	cpp.cpp sdk_missing.h config.h log.h edit-all
+	WordParser.{h,cpp} WebServer.{h,cpp} WebRequest.{h,cpp} HTMLFiles.{h,cpp}	\
+	cpp.cpp sdk_missing.h config.h log.h 	\
+	../build-html 	\
+	../html/index.html ../html/index.css ../html/index.js 	\
+	edit-all
 

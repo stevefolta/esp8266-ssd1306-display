@@ -1,4 +1,5 @@
 SOURCES := user_main.cpp WordDisplay.cpp SSD1306Display.cpp I2CMaster.cpp WordParser.cpp
+SOURCES += WebServer.cpp WebRequest.cpp HTMLFiles.cpp cpp.cpp
 SOURCES += cpp.cpp
 DRIVER_SOURCES := uart.c
 APP_NAME := display
@@ -18,6 +19,13 @@ VPATH += src
 
 # Project specific:
 
+HTML_FILES = $(wildcard html/*)
+
+$(OBJECTS_DIR)/HTMLFiles.o: $(OBJECTS_DIR)/html.h
+
+$(OBJECTS_DIR)/html.h: $(HTML_FILES)
+	@echo Building $@...
+	$(QUIET) ./build-html to: $@ strip: html/ $^
 
 
 #####

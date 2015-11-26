@@ -12,12 +12,14 @@ extern "C" {
 #include "SSD1306Display.h"
 #include "WordDisplay.h"
 #include "WordParser.h"
+#include "WebServer.h"
 #include "log.h"
 
 #include "config.h"
 
 static SSD1306Display* oled_display = 0;
 static WordDisplay* display = 0;
+static WebServer* web_server = 0;
 static os_timer_t timer;
 
 static const char text[] = "This is an ESP8266 running an OLED display.";
@@ -64,6 +66,7 @@ static void ICACHE_FLASH_ATTR check_connection(void* arg)
 			os_sprintf(msg, "Problem.");
 		display->show(msg);
 		schedule(between_text, 3000);
+		web_server = new WebServer();
 		}
 	else if (status == STATION_CONNECTING) {
 		retries = 0;
