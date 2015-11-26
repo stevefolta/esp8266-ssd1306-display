@@ -3,7 +3,7 @@
 
 #include "HTMLFiles.h"
 
-struct WebConnection;
+struct espconn;
 
 class WebServer {
 	public:
@@ -11,12 +11,12 @@ class WebServer {
 		~WebServer();
 
 	protected:
-		WebConnection*	connection;
+		struct espconn*	accept_connection;
 		HTMLFile	cur_file;
 		static WebServer*	the_server;
 
 		static void	listen(void* arg);
-		void	receive(char* data, unsigned short length);
+		void	receive(struct espconn* connection, char* data, unsigned short length);
 		static void	receive_fn(void* arg, char* data, unsigned short length);
 	};
 

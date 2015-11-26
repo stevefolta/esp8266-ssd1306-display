@@ -12,11 +12,6 @@ extern "C" {
 #include "sdk_missing.h"
 }
 
-struct WebConnection {
-	struct espconn	connection;
-	WebServer*	server;
-	};
-
 WebServer* WebServer::the_server = 0;
 
 
@@ -24,22 +19,21 @@ ICACHE_FLASH_ATTR WebServer::WebServer()
 {
 	the_server = this;
 
-	connection = (WebConnection*) os_zalloc(sizeof(WebConnection));
-	connection->connection.type = ESPCONN_TCP;
-	connection->connection.state = ESPCONN_NONE;
-	connection->connection.proto.tcp = (esp_tcp*) os_zalloc(sizeof(esp_tcp));
-	connection->connection.proto.tcp->local_port = 80;
-	espconn_regist_connectcb(&connection->connection, listen);
-	connection->server = this;
+	accept_connection = (struct espconn*) os_zalloc(sizeof(struct espconn));
+	accept_connection->type = ESPCONN_TCP;
+	accept_connection->state = ESPCONN_NONE;
+	accept_connection->proto.tcp = (esp_tcp*) os_zalloc(sizeof(esp_tcp));
+	accept_connection->proto.tcp->local_port = 80;
+	espconn_regist_connectcb(accept_connection, listen);
 
-	espconn_accept(&connection->connection);
+	espconn_accept(accept_connection);
 }
 
 
 ICACHE_FLASH_ATTR WebServer::~WebServer()
 {
-	os_free(connection->connection.proto.tcp);
-	os_free(connection);
+	os_free(accept_connection->proto.tcp);
+	os_free(accept_connection);
 }
 
 
@@ -50,12 +44,12 @@ void ICACHE_FLASH_ATTR WebServer::listen(void* arg)
 }
 
 
-void ICACHE_FLASH_ATTR WebServer::receive(char* data, unsigned short length)
+void ICACHE_FLASH_ATTR WebServer::receive(struct espconn* connection, char* data, unsigned short length)
 {
 	WebRequest request(data, length);
 	if (request.type == WebRequest::BAD) {
 		static const char bad_request[] = "400 Bad Request\r\n";
-		espconn_send(&connection->connection, (uint8*) bad_request, strlen(bad_request));
+		espconn_send(connection, (uint8*) bad_request, strlen(bad_request));
 		return;
 		}
 
@@ -75,7 +69,7 @@ void ICACHE_FLASH_ATTR WebServer::receive(char* data, unsigned short length)
 			log("Sending %s...\n", url);
 			//*** TODO: Need the response code & the headers!
 			espconn_send(
-				&connection->connection,
+				connection,
 				(uint8*) cur_file.contents, cur_file.size);
 			}
 		}
@@ -84,7 +78,7 @@ void ICACHE_FLASH_ATTR WebServer::receive(char* data, unsigned short length)
 
 void ICACHE_FLASH_ATTR WebServer::receive_fn(void* arg, char* data, unsigned short length)
 {
-	the_server->receive(data, length);
+	the_server->receive((struct espconn*) arg, data, length);
 }
 
 
