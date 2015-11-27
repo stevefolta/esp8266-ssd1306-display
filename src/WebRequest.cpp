@@ -1,7 +1,11 @@
 #include "WebRequest.h"
+#include "log.h"
 extern "C" {
 #include "string.h"
 #include "stdlib.h"
+#include "osapi.h"
+#include "ets_sys.h"
+#include "sdk_missing.h"
 }
 
 

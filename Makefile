@@ -4,6 +4,10 @@ SOURCES += cpp.cpp
 DRIVER_SOURCES := uart.c
 APP_NAME := display
 
+#####
+
+# This section is non-project specific.
+
 # SDK header problems revealed by U8glib:
 # SWITCHES += __have_long64=0 __int_fast64_t_defined=1
 
@@ -17,7 +21,9 @@ default: all
 
 VPATH += src
 
-# Project specific:
+#####
+
+# Later project-specific things.
 
 HTML_FILES = $(wildcard html/*)
 

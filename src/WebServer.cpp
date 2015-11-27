@@ -48,7 +48,7 @@ void ICACHE_FLASH_ATTR WebServer::receive(struct espconn* connection, char* data
 {
 	WebRequest request(data, length);
 	if (request.type == WebRequest::BAD) {
-		static const char bad_request[] = "400 Bad Request\r\n";
+		static const char bad_request[] = "400 Bad Request\r\n\r\n";
 		espconn_send(connection, (uint8*) bad_request, strlen(bad_request));
 		return;
 		}
@@ -67,11 +67,31 @@ void ICACHE_FLASH_ATTR WebServer::receive(struct espconn* connection, char* data
 		cur_file.load(url);
 		if (cur_file.is_valid()) {
 			log("Sending %s...\n", url);
-			//*** TODO: Need the response code & the headers!
-			espconn_send(
-				connection,
-				(uint8*) cur_file.contents, cur_file.size);
+			char headers[256];
+			static const char* headers_fmt =
+				"HTTP/1.1 400 OK\r\n"
+				"Content-Type: text/html; charset=UTF-8\r\n"
+				"Content-Length: %d\r\n"
+				"\r\n";
+			os_sprintf(headers, headers_fmt, cur_file.size);
+			int headers_length = strlen(headers);
+			int message_length = headers_length + cur_file.size;
+			char* message = (char*) os_zalloc(message_length);
+			strcpy(message, headers);
+			os_memcpy(message + headers_length, cur_file.contents, cur_file.size);
+			espconn_send(connection, (uint8*) message, message_length);
+			os_free(message);
 			}
+		else {
+			static const char not_found[] = "404 Not Found\r\n\r\n";
+			espconn_send(connection, (uint8*) not_found, strlen(not_found));
+			}
+		}
+
+	else {
+		static const char method_not_allowed[] = "405 Method Not Allowed\r\n\r\n";
+		espconn_send(
+			connection, (uint8*) method_not_allowed, strlen(method_not_allowed));
 		}
 }
 
