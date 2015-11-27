@@ -4,6 +4,8 @@
 // Espressif's SDK doesn't declare a lot of functions.  C doesn't really care,
 // but C++ does.
 
+#include "ets_sys.h"
+
 extern int os_printf_plus(const char* format, ...);
 extern int ets_sprintf(char* str, const char* format, ...);
 

@@ -4,6 +4,7 @@
 #include "HTMLFiles.h"
 
 struct espconn;
+class WebConnection;
 
 class WebServer {
 	public:
@@ -11,11 +12,17 @@ class WebServer {
 		~WebServer();
 
 	protected:
+		enum {
+			max_connections = 8,
+			};
+
 		struct espconn*	accept_connection;
+		WebConnection**	connections;
 		HTMLFile	cur_file;
 		static WebServer*	the_server;
 
-		static void	listen(void* arg);
+		void	new_connection(struct espconn* connection);
+		static void	new_connection_fn(void* arg);
 		void	receive(struct espconn* connection, char* data, unsigned short length);
 		static void	receive_fn(void* arg, char* data, unsigned short length);
 	};

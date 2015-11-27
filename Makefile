@@ -1,5 +1,5 @@
 SOURCES := user_main.cpp WordDisplay.cpp SSD1306Display.cpp I2CMaster.cpp WordParser.cpp
-SOURCES += WebServer.cpp WebRequest.cpp HTMLFiles.cpp cpp.cpp
+SOURCES += WebServer.cpp WebConnection.cpp WebRequest.cpp HTMLFiles.cpp cpp.cpp
 SOURCES += cpp.cpp
 DRIVER_SOURCES := uart.c
 APP_NAME := display
