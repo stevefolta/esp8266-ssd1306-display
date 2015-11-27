@@ -47,7 +47,8 @@ void ICACHE_FLASH_ATTR WebServer::listen(void* arg)
 
 void ICACHE_FLASH_ATTR WebServer::receive(struct espconn* connection, char* data, unsigned short length)
 {
-	WebRequest request(data, length);
+	WebRequest request;
+	request.received_data(data, length);
 	if (request.type == WebRequest::BAD) {
 		static const char bad_request[] = "400 Bad Request\r\n\r\n";
 		espconn_send(connection, (uint8*) bad_request, strlen(bad_request));

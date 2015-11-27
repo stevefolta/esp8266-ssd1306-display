@@ -5,19 +5,55 @@ extern "C" {
 #include "stdlib.h"
 #include "osapi.h"
 #include "ets_sys.h"
+#include "mem.h"
 #include "sdk_missing.h"
 }
 
 
-WebRequest::WebRequest(char* data, unsigned short length)
+ICACHE_FLASH_ATTR WebRequest::WebRequest()
 {
 	type = BAD;
 	url = body = NULL;
 	body_length = 0;
+	state = Starting;
+}
 
-	const char* end = data + length;
 
-	// Parse the first line.
+ICACHE_FLASH_ATTR WebRequest::~WebRequest()
+{
+	if (url)
+		os_free(url);
+	if (body)
+		os_free(body);
+}
+
+
+ICACHE_FLASH_ATTR void WebRequest::received_data(
+	char* data, unsigned short length)
+{
+	char* end = data + length;
+	switch (state) {
+		case Starting:
+			read_first_line(data, end);
+			break;
+		case ReadingHeaders:
+			read_headers(data, end);
+			break;
+		case ReadingBody:
+			read_body(data, end);
+			break;
+		default:
+			// ERROR!  We shouldn't get any more data at this point.
+			break;
+		}
+}
+
+
+ICACHE_FLASH_ATTR void WebRequest::read_first_line(char* data, char* end)
+{
+	// For now, we'll assume the first line won't arrive split among separate
+	// transmissions.
+
 	// Type.
 	char* line_end = strstr(data, "\r\n");
 	if (line_end == NULL)
@@ -53,22 +89,41 @@ WebRequest::WebRequest(char* data, unsigned short length)
 	space = strchr(data, ' ');
 	if (space == NULL || space > line_end) {
 		type = BAD;
+		state = Complete;
 		return;
 		}
-	*space = 0;
-	url = data;
+	const char* read_url = data;
+	int url_length = space - data;
 	// Skip the rest.
 	data = line_end + 2;
 
-	// Parse the headers.
+	// Copy the URL.
+	if (url)
+		os_free(url);
+	url = (char*) os_zalloc(url_length + 1);
+	memcpy(url, read_url, url_length);
+	url[url_length] = 0;
+
+	state = ReadingHeaders;
+	read_headers(data, end);
+}
+
+
+ICACHE_FLASH_ATTR void WebRequest::read_headers(char* data, char* end)
+{
+	char c;
+
+	// We're going to assume that none of the header lines will be split between
+	// two transmissions.
+
 	body_length = 0;
 	while (data < end) {
 		// Get the line.
-		line_end = strstr(data, "\r\n");
+		char* line_end = strstr(data, "\r\n");
 		if (line_end == NULL) {
 			// Malformed request.
 			type = BAD;
-			url = NULL;
+			state = Complete;
 			return;
 			}
 		*line_end = 0;
@@ -76,6 +131,7 @@ WebRequest::WebRequest(char* data, unsigned short length)
 		// Are we at the end of the headers?
 		if (data[0] == 0) {
 			data = line_end + 2;
+			state = ReadingBody;
 			break;
 			}
 
@@ -107,13 +163,33 @@ WebRequest::WebRequest(char* data, unsigned short length)
 		data = line_end + 2;
 		}
 
-	// Body.
-	body = data;
-	if (end - body < body_length) {
-		// We didn't get the whole body.  But what do we do about it?
-		body = NULL;
-		body_length = 0;
+	if (state == ReadingBody) {
+		if (body)
+			os_free(body);
+		body = (char*) os_zalloc(body_length);
+		body_out = body;
+		read_body(data, end);
 		}
+}
+
+
+ICACHE_FLASH_ATTR void WebRequest::read_body(char* data, char* end)
+{
+	int data_length = end - data;
+	int body_left_to_read = body_length - (body_out - body);
+	bool is_last_chunk = false;
+	if (data_length > body_left_to_read) {
+		log("Body overflow!\n");
+		end = data + body_left_to_read;
+		is_last_chunk = true;
+		}
+	else if (data_length == body_left_to_read)
+		is_last_chunk = true;
+
+	memcpy(body_out, data, data_length);
+	body_out += data_length;
+	if (is_last_chunk)
+		state = Complete;
 }
 
 
