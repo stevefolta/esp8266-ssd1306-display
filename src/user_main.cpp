@@ -123,6 +123,7 @@ void ICACHE_FLASH_ATTR between_message(void* arg)
 void ICACHE_FLASH_ATTR display_message(const char* new_message, int length)
 {
 	os_timer_disarm(&timer);
+	display->set_font_size(24);
 	display->show("");
 	if (message)
 		os_free(message);

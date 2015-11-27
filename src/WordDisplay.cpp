@@ -98,7 +98,7 @@ void ICACHE_FLASH_ATTR WordDisplay::next_word()
 		delete words;
 		words = 0;
 		}
-	else if (words->at_sentence_end())
+	else if (words->at_sentence_end() || words->at_paragraph_end())
 		ms = sentence_ms;
 	os_timer_setfn(&text_timer, next_word_fn, this);
 	os_timer_arm(&text_timer, ms, false);
