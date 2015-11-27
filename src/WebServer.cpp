@@ -1,6 +1,7 @@
 #include "WebServer.h"
 #include "WebRequest.h"
 #include "HTMLFiles.h"
+#include "user_main.h"
 #include "log.h"
 extern "C" {
 #include "ets_sys.h"
@@ -59,21 +60,30 @@ void ICACHE_FLASH_ATTR WebServer::receive(struct espconn* connection, char* data
 	while (url[0] == '/')
 		url += 1;
 
-	if (strncmp(url, "api/", 4) == 0) {
-		//***
-		}
+	static const char not_found[] = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n";
 
-	else if (request.type == WebRequest::GET) {
+	if (request.type == WebRequest::GET) {
 		cur_file.load(url);
 		if (cur_file.is_valid()) {
 			log("Sending %s...\n", url);
+			const char* content_type = "text/plain";
+			const char* dot = strrchr(url, '.');
+			if (dot) {
+				const char* suffix = dot + 1;
+				if (strcmp(suffix, "html") == 0)
+					content_type = "text/html";
+				else if (strcmp(suffix, "css") == 0)
+					content_type = "text/css";
+				else if (strcmp(suffix, "js") == 0)
+					content_type = "application/javascript";
+				}
 			char headers[256];
 			static const char* headers_fmt =
-				"HTTP/1.1 400 OK\r\n"
-				"Content-Type: text/html; charset=UTF-8\r\n"
+				"HTTP/1.1 200 OK\r\n"
+				"Content-Type: %s\r\n"
 				"Content-Length: %d\r\n"
 				"\r\n";
-			os_sprintf(headers, headers_fmt, cur_file.size);
+			os_sprintf(headers, headers_fmt, content_type, cur_file.size);
 			int headers_length = strlen(headers);
 			int message_length = headers_length + cur_file.size;
 			char* message = (char*) os_zalloc(message_length);
@@ -82,14 +92,25 @@ void ICACHE_FLASH_ATTR WebServer::receive(struct espconn* connection, char* data
 			espconn_send(connection, (uint8*) message, message_length);
 			os_free(message);
 			}
-		else {
-			static const char not_found[] = "404 Not Found\r\n\r\n";
+		else
 			espconn_send(connection, (uint8*) not_found, strlen(not_found));
+		}
+
+	else if (request.type == WebRequest::POST) {
+		if (strcmp(url, "message") == 0) {
+			display_message(request.body, request.body_length);
+			static const char* generic_ok =
+				"HTTP/1.1 200 OK\r\n"
+				"Content-Length: 0\r\n"
+				"\r\n";
+			espconn_send(connection, (uint8*) generic_ok, strlen(generic_ok));
 			}
+		else
+			espconn_send(connection, (uint8*) not_found, strlen(not_found));
 		}
 
 	else {
-		static const char method_not_allowed[] = "405 Method Not Allowed\r\n\r\n";
+		static const char method_not_allowed[] = "HTTP/1.1 405 Method Not Allowed\r\n\r\n";
 		espconn_send(
 			connection, (uint8*) method_not_allowed, strlen(method_not_allowed));
 		}

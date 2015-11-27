@@ -20,12 +20,15 @@ extern "C" {
 static SSD1306Display* oled_display = 0;
 static WordDisplay* display = 0;
 static WebServer* web_server = 0;
+static char* message = 0;
+static int message_length = 0;
 static os_timer_t timer;
 
 static const char text[] = "This is an ESP8266 running an OLED display.";
 #include "wiki.h"
 
 static void between_text(void* arg);
+static void between_message(void* arg);
 
 static void ICACHE_FLASH_ATTR schedule(void (*fn)(void*), int ms)
 {
@@ -100,6 +103,36 @@ static void ICACHE_FLASH_ATTR start_display(void* arg)
 	oled_display->turn_on();
 
 	schedule(check_connection, 1000);
+}
+
+
+void ICACHE_FLASH_ATTR show_message(void* arg)
+{
+	display->show_text(message, message_length, between_message, NULL);
+}
+
+
+void ICACHE_FLASH_ATTR between_message(void* arg)
+{
+	display->set_font_size(24);
+	display->show("");
+	schedule(show_message, 1000);
+}
+
+
+void ICACHE_FLASH_ATTR display_message(const char* new_message, int length)
+{
+	os_timer_disarm(&timer);
+	display->show("");
+	if (message)
+		os_free(message);
+	if (length < 0)
+		length = strlen(new_message);
+	message = (char*) os_zalloc(length + 1);
+	memcpy(message, new_message, length);
+	message[length] = 0;
+	message_length = length;
+	show_message(NULL);
 }
 
 

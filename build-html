@@ -21,10 +21,10 @@ def add_file(path):
 	for line in in_file:
 		if line[-1] == '\n':
 			line = line[:-1]
-		size += len(line) + 2
+		size += len(line) + 1
 		line = re.sub(r'\\', r'\\\\', line)
 		line = re.sub(r'"', r'\\"', line)
-		out_file.write('\t"' + line + '\\r\\n"\n')
+		out_file.write('\t"' + line + '\\n"\n')
 	out_file.write('\t};\n')
 	in_file.close()
 	path_str = c_name + '_path'
