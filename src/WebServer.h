@@ -25,6 +25,8 @@ class WebServer {
 		static void	new_connection_fn(void* arg);
 		void	receive(struct espconn* connection, char* data, unsigned short length);
 		static void	receive_fn(void* arg, char* data, unsigned short length);
+		void	disconnected(struct espconn* connection);
+		static void	disconnected_fn(void* arg);
 	};
 
 

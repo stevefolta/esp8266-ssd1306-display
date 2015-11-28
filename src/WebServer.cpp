@@ -44,6 +44,7 @@ ICACHE_FLASH_ATTR WebServer::~WebServer()
 void ICACHE_FLASH_ATTR WebServer::new_connection(struct espconn* connection)
 {
 	espconn_regist_recvcb(connection, receive_fn);
+	espconn_regist_disconcb(connection, disconnected_fn);
 
 	for (int i = 0; i < max_connections; ++i) {
 		if (!connections[i]) {
@@ -75,6 +76,25 @@ void ICACHE_FLASH_ATTR WebServer::receive_fn(void* arg, char* data, unsigned sho
 {
 	the_server->receive((struct espconn*) arg, data, length);
 }
+
+
+void ICACHE_FLASH_ATTR WebServer::disconnected(struct espconn* connection)
+{
+	for (int i = 0; i < max_connections; ++i) {
+		if (connections[i] && connection == connections[i]->connection) {
+			delete connections[i];
+			connections[i] = 0;
+			break;
+			}
+		}
+}
+
+
+void ICACHE_FLASH_ATTR WebServer::disconnected_fn(void* arg)
+{
+	the_server->disconnected((struct espconn*) arg);
+}
+
 
 
 
