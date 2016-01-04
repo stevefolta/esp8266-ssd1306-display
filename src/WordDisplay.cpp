@@ -9,7 +9,7 @@ extern "C" {
 
 
 enum {
-	word_ms = 140,
+	default_word_ms = 140,
 	sentence_ms = 1000,
 	text_end_ms = 2000,
 	};
@@ -19,6 +19,7 @@ ICACHE_FLASH_ATTR WordDisplay::WordDisplay(SSD1306Display* oled_display_in)
 {
 	os_timer_disarm(&text_timer);
 	set_font_size(24);
+	word_ms = default_word_ms;
 }
 
 

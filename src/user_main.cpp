@@ -137,6 +137,12 @@ void ICACHE_FLASH_ATTR display_message(const char* new_message, int length)
 }
 
 
+void ICACHE_FLASH_ATTR set_word_delay(int delay_ms)
+{
+	display->set_word_delay(delay_ms);
+}
+
+
 extern "C"
 void user_init(void)
 {

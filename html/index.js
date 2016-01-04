@@ -6,6 +6,12 @@ function load() {
 		request.open('POST', 'message', true);
 		request.send(message);
 		};
+	document.getElementById('set-word-delay').onclick = function() {
+		var element = document.getElementById('word-delay');
+		var request = new XMLHttpRequest();
+		request.open('POST', 'word-delay', true);
+		request.send(element.value);
+		};
 	}
 
 

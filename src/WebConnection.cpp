@@ -3,6 +3,7 @@
 #include "HTMLFiles.h"
 #include "user_main.h"
 #include "log.h"
+#include "stdlib.h"
 extern "C" {
 #include "ip_addr.h"
 #include "espconn.h"
@@ -79,13 +80,22 @@ ICACHE_FLASH_ATTR void WebConnection::received_data(char* data, unsigned short l
 		}
 
 	else if (request->type == WebRequest::POST) {
+		static const char* generic_ok =
+			"HTTP/1.1 200 OK\r\n"
+			"Content-Length: 0\r\n"
+			"\r\n";
 		if (strcmp(url, "message") == 0) {
 			display_message(request->body, request->body_length);
-			static const char* generic_ok =
-				"HTTP/1.1 200 OK\r\n"
-				"Content-Length: 0\r\n"
-				"\r\n";
 			espconn_send(connection, (uint8*) generic_ok, strlen(generic_ok));
+			}
+		else if (strcmp(url, "word-delay") == 0) {
+			char str[64];
+			int length = request->body_length;
+			if (length > 63)
+				length = 63;
+			strncpy(str, request->body, length);
+			str[length] = 0;
+			set_word_delay(atoi(str));
 			}
 		else
 			espconn_send(connection, (uint8*) not_found, strlen(not_found));

@@ -146,9 +146,10 @@ EARLY_LINK_FLAGS = 	\
 	-u call_user_start 	\
 	-Wl,-static 	\
 	-Wl,--start-group 	\
-	-lc -lgcc -lhal -lphy -lpp -lnet80211 	\
+	-lc -lgcc -lphy -lpp -lnet80211 	\
 	-llwip -lwpa -lmain -ljson -lupgrade\
 	-lssl -lpwm -lsmartconfig
+# EARLY_LINK_FLAGS += -lhal
 LATE_LINK_FLAGS = 	\
 	-Wl,--end-group
 
@@ -265,5 +266,6 @@ test:
 show-stuff:
 	@echo VPATH: $(VPATH)
 	@echo OBJECTS: $(OBJECTS)
+	@echo PATH: $(PATH)
 	
 
